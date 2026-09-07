@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>바르셀로나 미쉐린 식당 v2 (2026)</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --ink: #1a1d21;
+      --muted: #5c6570;
+      --line: #e4e7eb;
+      --accent: #0b5fff;
+      --accent-soft: #e8f0ff;
+      --gain: #0a7a3e;
+      --gain-soft: #e7f6ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); margin: 0 0 22px; }
+    .panel, .card, .table-card, .chart-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .panel { padding: 18px 20px; margin-bottom: 16px; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1.4fr;
+      gap: 14px 16px;
+      align-items: end;
+    }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    select, input[type="search"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--ink);
+    }
+    .stars {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 2px;
+    }
+    .stars label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card { padding: 14px 16px; }
+    .kpi-label { font-size: 13px; color: var(--muted); }
+    .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.03em; }
+    .kpi-sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
+    .chart-card { padding: 16px 18px 10px; margin-bottom: 16px; }
+    .chart-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    svg { width: 100%; height: 280px; display: block; }
+    .tick { font-size: 11px; fill: var(--muted); }
+    .axis { stroke: var(--line); stroke-width: 1; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .resto {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .resto-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .resto h2 { font-size: 18px; margin: 0; letter-spacing: -0.02em; }
+    .name-ko { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .chef { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .badge.green { background: var(--gain-soft); color: var(--gain); }
+    .meta { font-size: 14px; }
+    .meta dt {
+      float: left;
+      width: 88px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      clear: left;
+      padding-top: 3px;
+    }
+    .meta dd { margin: 0 0 6px 88px; }
+    .site { font-size: 13px; }
+    .site a { color: var(--accent); text-decoration: none; }
+    .site a:hover { text-decoration: underline; }
+    .table-card { overflow: hidden; margin-bottom: 16px; }
+    .table-scroll { overflow: auto; max-height: 520px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8f9fb;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+    tbody tr:hover { background: #f7f9fc; }
+    .note { margin-top: 16px; color: var(--muted); font-size: 13px; }
+    .note h3 { color: var(--ink); font-size: 14px; margin: 0 0 8px; }
+    .note ul { margin: 0; padding-left: 18px; }
+    .empty { color: var(--muted); padding: 20px; text-align: center; }
+    @media (max-width: 800px) {
+      .controls, .kpis, .cards { grid-template-columns: 1fr; }
+      .kpi-value { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>바르셀로나 미쉐린 식당 v2</h1>
+    <p class="sub">미쉐린 가이드 스페인 2026 · 바르셀로나 시내 29곳 · 코스 1인 가격(음료 제외)</p>
+
+    <section class="panel">
+      <div class="controls">
+        <div>
+          <label>스타</label>
+          <div class="stars">
+            <label><input type="checkbox" name="star" value="3" checked /> 3</label>
+            <label><input type="checkbox" name="star" value="2" checked /> 2</label>
+            <label><input type="checkbox" name="star" value="1" checked /> 1</label>
+          </div>
+        </div>
+        <div>
+          <label for="area">동네</label>
+          <select id="area">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <div>
+          <label for="lunch">점심 코스</label>
+          <select id="lunch">
+            <option value="">전체</option>
+            <option value="yes">있음</option>
+            <option value="no">없음·미확인</option>
+          </select>
+        </div>
+        <div>
+          <label for="dress">드레스코드</label>
+          <select id="dress">
+            <option value="">전체</option>
+            <option value="enforced">명시 규정</option>
+            <option value="suggested">권장</option>
+            <option value="casual">캐주얼·명시 없음</option>
+          </select>
+        </div>
+        <div>
+          <label for="q">이름 검색</label>
+          <input id="q" type="search" placeholder="식당·셰프·한글명" />
+        </div>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <article class="card">
+        <div class="kpi-label">표시 식당</div>
+        <div class="kpi-value" id="kpi-count">0</div>
+        <div class="kpi-sub" id="kpi-stars"></div>
+      </article>
+      <article class="card">
+        <div class="kpi-label">점심 코스 최저</div>
+        <div class="kpi-value" id="kpi-lunch">—</div>
+        <div class="kpi-sub" id="kpi-lunch-name"></div>
+      </article>
+      <article class="card">
+        <div class="kpi-label">저녁 코스 범위</div>
+        <div class="kpi-value" id="kpi-dinner">—</div>
+        <div class="kpi-sub">확인된 저녁 코스 기준</div>
+      </article>
+    </section>
+
+    <section class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>스타</th>
+              <th>이름</th>
+              <th>위치</th>
+              <th>점심</th>
+              <th>저녁</th>
+              <th>드레스</th>
+              <th>음식</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cards" id="cards"></section>
+
+    <section class="chart-card">
+      <div class="chart-title">동네별 식당 수 (곳)</div>
+      <svg id="chart" viewBox="0 0 1000 280" role="img" aria-label="동네별 식당 수 막대 그래프"></svg>
+    </section>
+
+    <footer class="note">
+      <h3>가정·한계</h3>
+      <ul>
+        <li>스타는 미쉐린 가이드 스페인 2026(2025년 11월 발표) 바르셀로나 시내 목록이다. 인접시 Lluerna, Tresmacarrons는 제외했다.</li>
+        <li>가격은 코스 음식 1인분. 와인·봉사료·예약 보증금은 별도. 스페인 외식 IVA(보통 10%)는 공식 표기에 포함된 경우가 많다.</li>
+        <li>점심/저녁이 같은 코스면 양쪽에 같은 금액을 적었다. 평일 점심 특별 메뉴가 있으면 점심 칸에 그 값을 우선했다.</li>
+        <li>드레스코드 “명시 규정”은 예약/웹에 복장 제한이 적힌 경우만. 나머지는 권장 또는 캐주얼·명시 없음.</li>
+        <li>식당명·동네·메뉴 한글은 병기 표기다. 예약·지도 검색은 원어를 쓴다.</li>
+        <li>SCAPAR는 미쉐린 페이지에 일시 휴업 표기가 있었던 적이 있다. 예약 페이지는 오마카세 €140으로 열려 있으니 방문 전 영업을 확인한다.</li>
+        <li>가격은 2026년 3–6월 전후 확인분이다. 예약 전 공식 사이트에서 다시 본다.</li>
+        <li>지도 API는 쓰지 않는다. 위치는 동네와 주소 텍스트다.</li>
+      </ul>
+      <h3>출처</h3>
+      <ul>
+        <li>목록: Michelin Guide Spain 2026 공식 스타 리스트</li>
+        <li>가격·드레스: 각 식당 공식 사이트/예약 페이지를 우선. 미게시 항목은 Guidavera(2026년 3–6월 검증) 등으로 교차확인 후 출처를 카드에 적음</li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>
+    const AREA_KO = {
+      Eixample: "에이샴플라",
+      "Sant Gervasi": "산 제르바시",
+      "Sant Antoni": "산 안토니",
+      "Gràcia": "그라시아",
+      Barceloneta: "바르셀로네타",
+      "Ciutat Vella": "시우타트 베야",
+      "Les Corts": "레스 코르츠",
+      "Poble Sec": "포블레 세크",
+      Sants: "산츠"
+    };
+
+    const RESTAURANTS = [
+      {
+        name: "Disfrutar",
+        nameKo: "디스프루타르",
+        chef: "Oriol Castro, Eduard Xatruch, Mateu Casañas",
+        stars: 3,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer de Villarroel 163",
+        addressKo: "비야로엘 거리 163",
+        cuisine: "창작·지중해, 엘불리 계보. Classic/Festival 두 코스",
+        lunchHas: true,
+        lunchText: "Classic / Festival €325 (클래식 / 페스티벌)",
+        lunchEur: 325,
+        dinnerText: "Classic / Festival €325 (클래식 / 페스티벌)",
+        dinnerEur: 325,
+        dress: "suggested",
+        dressText: "권장 · 공식 문구 없음, 스마트캐주얼 관행",
+        website: "https://www.disfrutarbarcelona.com",
+        source: "공식 사이트 (가격 유효 2027-08-07)",
+        extra: "점심·저녁 동일 코스. Living Table(살아 있는 테이블, R&D)은 별도"
+      },
+      {
+        name: "Lasarte",
+        nameKo: "라사르테",
+        chef: "Martín Berasategui / Paolo Casagrande",
+        stars: 3,
+        area: "Eixample",
+        hood: "Eixample Dreta · Monument Hotel",
+        hoodKo: "에이샴플라 우측 · 모뉴먼트 호텔",
+        address: "Carrer de Mallorca 259",
+        addressKo: "마요르카 거리 259",
+        cuisine: "바스크-카탈란 파인 다이닝",
+        lunchHas: true,
+        lunchText: "Lunch Menu €245 (점심 코스, 수–금, 한 테이블 전원)",
+        lunchEur: 245,
+        dinnerText: "Tasting Menu €345 (테이스팅) · Il Milione €490 (일 밀리오네)",
+        dinnerEur: 345,
+        dress: "enforced",
+        dressText: "명시 규정 · 남성 긴바지·닫힌 신발 필수, 스포츠웨어 금지, 재킷은 필수는 아님",
+        website: "https://www.restaurantlasarte.com",
+        source: "공식 사이트(메뉴·예약 약관)",
+        extra: "알라카르트도 있음"
+      },
+      {
+        name: "Cocina Hermanos Torres",
+        nameKo: "코시나 에르마노스 토레스",
+        chef: "Sergio Torres, Javier Torres",
+        stars: 3,
+        area: "Les Corts",
+        hood: "Les Corts",
+        hoodKo: "레스 코르츠",
+        address: "Carrer del Taquígraf Serra 20",
+        addressKo: "타키그라프 세라 거리 20",
+        cuisine: "창작 지중해, 오픈 키친. Green Star",
+        lunchHas: true,
+        lunchText: "Revolución €320 (레볼루시온, 점심·저녁 동일로 안내됨)",
+        lunchEur: 320,
+        dinnerText: "Revolución €320 (레볼루시온)",
+        dinnerEur: 320,
+        dress: "suggested",
+        dressText: "권장 · 공식 강제 문구 없음, 스마트캐주얼",
+        website: "https://www.cocinahermanostorres.com",
+        source: "Guidavera 2026 교차확인 (공식 사이트 403)",
+        extra: "시내 3스타 중 유일한 Green Star"
+      },
+      {
+        name: "ABaC",
+        nameKo: "아바크",
+        chef: "Jordi Cruz",
+        stars: 3,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Tibidabo 기슭",
+        hoodKo: "산 제르바시 · 티비다보 기슭",
+        address: "Avinguda del Tibidabo 1",
+        addressKo: "티비다보 대로 1",
+        cuisine: "창작 지중해, 호텔 빌라 다이닝",
+        lunchHas: true,
+        lunchText: "Menú Degustación €315 (테이스팅, 점심·저녁 동일 안내)",
+        lunchEur: 315,
+        dinnerText: "Menú Degustación €315 (테이스팅)",
+        dinnerEur: 315,
+        dress: "suggested",
+        dressText: "권장 · 호텔 격식, 스마트캐주얼~정장",
+        website: "https://abacrestaurant.com",
+        source: "Guidavera 2026-03 (공식 사이트 가격 미게시)",
+        extra: ""
+      },
+      {
+        name: "Aleia",
+        nameKo: "알레아",
+        chef: "Paulo Airaudo / Rafa de Bedoya",
+        stars: 2,
+        area: "Gràcia",
+        hood: "Gràcia · Hotel Casa Fuster",
+        hoodKo: "그라시아 · 호텔 카사 푸스테르",
+        address: "Passeig de Gràcia 132",
+        addressKo: "그라시아 산책로 132",
+        cuisine: "지중해 시즌 코스, 안달루시아 뿌리",
+        lunchHas: true,
+        lunchText: "Menú de Temporada €210 (시즌 테이스팅)",
+        lunchEur: 210,
+        dinnerText: "Menú de Temporada €210 (시즌 테이스팅)",
+        dinnerEur: 210,
+        dress: "suggested",
+        dressText: "권장 · 모데르니스타 호텔, 스마트캐주얼 이상",
+        website: "https://www.aleiarestaurant.com",
+        source: "공식 사이트",
+        extra: ""
+      },
+      {
+        name: "Enigma",
+        nameKo: "에니그마",
+        chef: "Albert Adrià",
+        stars: 2,
+        area: "Sant Antoni",
+        hood: "Sant Antoni",
+        hoodKo: "산 안토니",
+        address: "Carrer de Sepúlveda 38-40",
+        addressKo: "세풀베다 거리 38-40",
+        cuisine: "창작·시즌, 엘불리 계보. 20–25접시",
+        lunchHas: false,
+        lunchText: "점심 코스 없음(디너 시팅)",
+        lunchEur: null,
+        dinnerText: "Tasting Menu €280 (테이스팅)",
+        dinnerEur: 280,
+        dress: "suggested",
+        dressText: "권장 · 공식 강제 문구 없음",
+        website: "https://www.enigmaconcept.es",
+        source: "공식 사이트",
+        extra: "음료 미포함이라고 명시"
+      },
+      {
+        name: "Cinc Sentits",
+        nameKo: "싱크 센티츠",
+        chef: "Jordi Artal",
+        stars: 2,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer d'Entença 60",
+        addressKo: "엔텐사 거리 60",
+        cuisine: "현대 카탈란, 소농 산물. 카탈란어로 ‘다섯 감각’",
+        lunchHas: false,
+        lunchText: "점심 코스 미확인(저녁 중심)",
+        lunchEur: null,
+        dinnerText: "Menú ligero €189 (라이트) / Menú degustación €219 (테이스팅)",
+        dinnerEur: 219,
+        dress: "suggested",
+        dressText: "권장 · 스마트캐주얼",
+        website: "https://www.cincsentits.com",
+        source: "공식 사이트(메뉴 가격)",
+        extra: ""
+      },
+      {
+        name: "Enoteca Paco Pérez",
+        nameKo: "에노테카 파코 페레스",
+        chef: "Paco Pérez",
+        stars: 2,
+        area: "Barceloneta",
+        hood: "Barceloneta · Hotel Arts",
+        hoodKo: "바르셀로네타 · 호텔 아츠",
+        address: "Carrer de la Marina 19-21",
+        addressKo: "마리나 거리 19-21",
+        cuisine: "현대 지중해, 코스타 브라바 산물",
+        lunchHas: true,
+        lunchText: "El Arroz de Paco €150 (파코의 쌀 코스, 토 점심)",
+        lunchEur: 150,
+        dinnerText: "Menú degustación 약 €230 (테이스팅)",
+        dinnerEur: 230,
+        dress: "suggested",
+        dressText: "권장 · 호텔 격식",
+        website: "https://enotecapacoperez.com",
+        source: "공식(쌀 코스) + 교차확인(저녁 €230)",
+        extra: "화–금은 저녁만, 토는 점심·저녁"
+      },
+      {
+        name: "Mont Bar",
+        nameKo: "몬트 바",
+        chef: "Fran Agudo",
+        stars: 2,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer de la Diputació 220",
+        addressKo: "디푸타시오 거리 220",
+        cuisine: "가스트로바 형식의 창작 요리",
+        lunchHas: true,
+        lunchText: "À la carte (알라카르트, 코스 아님, 스낵·메인 최소 주문)",
+        lunchEur: null,
+        dinnerText: "Classic €190 (클래식) / Mont €240 (몬트)",
+        dinnerEur: 190,
+        dress: "casual",
+        dressText: "캐주얼·명시 없음 · 바 좌석 가능",
+        website: "https://www.montbar.com",
+        source: "교차확인 2026 (공식 사이트 가격 미게시)",
+        extra: "2026 가이드에서 2스타 승격"
+      },
+      {
+        name: "Alkimia",
+        nameKo: "알키미아",
+        chef: "Jordi Vilà",
+        stars: 1,
+        area: "Sant Antoni",
+        hood: "Sant Antoni · Fàbrica Moritz",
+        hoodKo: "산 안토니 · 모리츠 양조장",
+        address: "Ronda de Sant Antoni 41",
+        addressKo: "산 안토니 순환로 41",
+        cuisine: "현대 카탈란",
+        lunchHas: true,
+        lunchText: "Taula del Migdia €110 (점심 테이블)",
+        lunchEur: 110,
+        dinnerText: "Taula de Cuina Catalana €188 (카탈란 요리 테이블)",
+        dinnerEur: 188,
+        dress: "suggested",
+        dressText: "권장 · 양조장 1층 격식",
+        website: "https://alkimia.cat",
+        source: "공식 사이트",
+        extra: ""
+      },
+      {
+        name: "Angle",
+        nameKo: "앙글",
+        chef: "Jordi Cruz / Elena Cerezo",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Esquerra · Hotel Cram",
+        hoodKo: "에이샴플라 좌측 · 호텔 크람",
+        address: "Carrer d'Aragó 214",
+        addressKo: "아라곤 거리 214",
+        cuisine: "현대 창작, Cruz 그룹의 접근형 코스",
+        lunchHas: true,
+        lunchText: "Executive €95 (이그제큐티브, 평일) / Angle €145 (앙글) / Grand €185 (그랑)",
+        lunchEur: 95,
+        dinnerText: "Angle €145 (앙글) / Grand Angle €185 (그랑 앙글)",
+        dinnerEur: 145,
+        dress: "suggested",
+        dressText: "권장 · 호텔 스마트캐주얼",
+        website: "https://anglebarcelona.com",
+        source: "Guidavera 2026-03",
+        extra: ""
+      },
+      {
+        name: "Atempo",
+        nameKo: "아템포",
+        chef: "Jordi Cruz / Iñaki Aldrey",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer de Còrsega 200",
+        addressKo: "코르세가 거리 200",
+        cuisine: "현대 창작, 테이블사이드 피니시. 알라카르트 가능",
+        lunchHas: true,
+        lunchText: "Atempo €150 (아템포) / Gran Atempo €185 (그란 아템포)",
+        lunchEur: 150,
+        dinnerText: "Atempo €150 (아템포) / Gran Atempo €185 (그란 아템포)",
+        dinnerEur: 150,
+        dress: "suggested",
+        dressText: "권장 · 스마트캐주얼",
+        website: "https://atemporestaurant.com",
+        source: "공식 사이트 가스트로노미아",
+        extra: ""
+      },
+      {
+        name: "Caelis",
+        nameKo: "카엘리스",
+        chef: "Romain Fornell",
+        stars: 1,
+        area: "Ciutat Vella",
+        hood: "Gòtic · Hotel Ohla",
+        hoodKo: "고딕 지구 · 호텔 올라",
+        address: "Via Laietana 49",
+        addressKo: "라이에타나 거리 49",
+        cuisine: "프랑스 기법 + 카탈란 산물. 채식 코스 있음",
+        lunchHas: true,
+        lunchText: "Menú Caelis €65 (카엘리스 점심 메뉴, 수–토 13:30–15:00, IVA 포함)",
+        lunchEur: 65,
+        dinnerText: "Menús degustación 3종 (테이스팅 3종, 채식 포함). 금액은 공식 상세 미확인",
+        dinnerEur: null,
+        dress: "suggested",
+        dressText: "권장 · 호텔 스마트캐주얼",
+        website: "https://www.caelis.com",
+        source: "공식 사이트(점심 €65)",
+        extra: "교차확인 저녁 테이스팅 약 €135대"
+      },
+      {
+        name: "COME by Paco Méndez",
+        nameKo: "코메 바이 파코 멘데스",
+        chef: "Paco Méndez",
+        stars: 1,
+        area: "Sant Antoni",
+        hood: "Sant Antoni",
+        hoodKo: "산 안토니",
+        address: "Avinguda de Mistral 54",
+        addressKo: "미스트랄 대로 54",
+        cuisine: "현대 창작, 멕시코를 출발점으로 한 지중해 해석",
+        lunchHas: true,
+        lunchText: "Festival 약 €185 (페스티벌 코스, 점심 운영일 있음)",
+        lunchEur: 185,
+        dinnerText: "Festival 약 €185 (페스티벌)",
+        dinnerEur: 185,
+        dress: "suggested",
+        dressText: "권장 · 공식 문구 없음",
+        website: "https://come.com.es",
+        source: "교차확인(가격) + 공식(콘셉트·영업)",
+        extra: "월·금·토 점심, 목–토 저녁"
+      },
+      {
+        name: "Dos Palillos",
+        nameKo: "도스 팔리요스",
+        chef: "Albert Raurich",
+        stars: 1,
+        area: "Ciutat Vella",
+        hood: "Raval",
+        hoodKo: "라발",
+        address: "Carrer d'Elisabets 9",
+        addressKo: "엘리사베츠 거리 9",
+        cuisine: "아시아 타파스 카운터, 엘불리 계보. 스페인어로 ‘젓가락 두 개’",
+        lunchHas: true,
+        lunchText: "Counter tasting 약 €140 / €175 (카운터 코스)",
+        lunchEur: 140,
+        dinnerText: "Counter tasting 약 €140 / €175 (카운터 코스)",
+        dinnerEur: 140,
+        dress: "casual",
+        dressText: "캐주얼·명시 없음 · 바 카운터",
+        website: "https://www.dospalillos.com",
+        source: "교차확인 2026 (공식 사이트 가격 미게시)",
+        extra: ""
+      },
+      {
+        name: "Fishølogy",
+        nameKo: "피시올로지",
+        chef: "Riccardo Radice",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer de Diputació 73",
+        addressKo: "디푸타시오 거리 73",
+        cuisine: "해산물 전용, 숙성·훈제·바다 샤퀴테리",
+        lunchHas: true,
+        lunchText: "Benthos €115 (벤토스, 연안) / Abyssal €140 (어비설, 심해)",
+        lunchEur: 115,
+        dinnerText: "Benthos €115 (벤토스, 연안) / Abyssal €140 (어비설, 심해)",
+        dinnerEur: 115,
+        dress: "casual",
+        dressText: "캐주얼·명시 없음 · 오픈 키친, 비격식",
+        website: "https://www.fishology.es",
+        source: "공식 사이트",
+        extra: "코스는 테이블 전원 동일"
+      },
+      {
+        name: "Hisop",
+        nameKo: "이솝",
+        chef: "Oriol Ivern",
+        stars: 1,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Galvany",
+        hoodKo: "산 제르바시 · 갈바니",
+        address: "Passatge Marimon 9",
+        addressKo: "마리몬 골목 9",
+        cuisine: "창작 카탈란, 알라카르트 가능",
+        lunchHas: true,
+        lunchText: "Menú degustación 9코스 약 €100 (테이스팅, 알라카르트도 가능)",
+        lunchEur: 100,
+        dinnerText: "Menú degustación 9코스 약 €100 (테이스팅)",
+        dinnerEur: 100,
+        dress: "suggested",
+        dressText: "권장 · 작은 룸, 스마트캐주얼",
+        website: "https://www.hisop.com",
+        source: "교차확인 2026 (공식 사이트 가격 미게시)",
+        extra: ""
+      },
+      {
+        name: "Hofmann",
+        nameKo: "호프만",
+        chef: "Silvia Hofmann / Diego Grimberg",
+        stars: 1,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Galvany",
+        hoodKo: "산 제르바시 · 갈바니",
+        address: "Carrer de la Granada del Penedès 14-16",
+        addressKo: "그라나다 델 페네데스 거리 14-16",
+        cuisine: "클래식-현대 조화, 페이스트리 강점",
+        lunchHas: true,
+        lunchText: "Menú Semanal €59 (주간 점심) / Menú Gastronómico €85 (가스트로노믹 점심)",
+        lunchEur: 59,
+        dinnerText: "Executive €75 (이그제큐티브) / Gastronomic €91 (가스트로노믹) / Luxury €110 (럭셔리)",
+        dinnerEur: 75,
+        dress: "suggested",
+        dressText: "권장 · 스마트캐주얼",
+        website: "https://www.hofmannrestaurante.com",
+        source: "Guidavera 2026-03 (IVA 10% 포함)",
+        extra: "주말 휴무로 안내됨"
+      },
+      {
+        name: "Kamikaze",
+        nameKo: "카미카제",
+        chef: "Enric Buendia",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Esquerra",
+        hoodKo: "에이샴플라 좌측",
+        address: "Carrer de Rosselló 197",
+        addressKo: "로세요 거리 197",
+        cuisine: "일식 시선 + 지중해·카탈란. 2026 신규 1스타",
+        lunchHas: true,
+        lunchText: "Menú Kamikaze €95 (카미카제 메뉴, 수–토 점심)",
+        lunchEur: 95,
+        dinnerText: "Menú Kamikaze €95 (카미카제 메뉴)",
+        dinnerEur: 95,
+        dress: "suggested",
+        dressText: "권장 · 공식 문구 없음",
+        website: "https://www.kamikazebarcelona.com",
+        source: "교차확인 2026",
+        extra: "화는 저녁만"
+      },
+      {
+        name: "Koy Shunka",
+        nameKo: "코이 슝카",
+        chef: "Hideki Matsuhisa",
+        stars: 1,
+        area: "Ciutat Vella",
+        hood: "Gòtic",
+        hoodKo: "고딕 지구",
+        address: "Carrer Copons 7",
+        addressKo: "코폰스 거리 7",
+        cuisine: "일식 오마카세 + 카탈란 산물",
+        lunchHas: true,
+        lunchText: "Menú Koy €178 (코이 메뉴) / Experience €218 (익스피리언스)",
+        lunchEur: 178,
+        dinnerText: "Menú Koy €178 (코이 메뉴) / Experience €218 (익스피리언스)",
+        dinnerEur: 178,
+        dress: "suggested",
+        dressText: "권장 · 카운터 격식",
+        website: "https://koyshunka.com",
+        source: "Guidavera 2026-03 (IVA 포함)",
+        extra: "알라카르트 없음, 테이블당 한 메뉴"
+      },
+      {
+        name: "MAE Barcelona",
+        nameKo: "마에 바르셀로나",
+        chef: "Diego Mondragón, Germán Espinosa 등",
+        stars: 1,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Galvany",
+        hoodKo: "산 제르바시 · 갈바니",
+        address: "Carrer Sant Elies 22",
+        addressKo: "산트 엘리에스 거리 22",
+        cuisine: "카탈란 + 콜롬비아·코스타리카. 알라카르트 가능",
+        lunchHas: true,
+        lunchText: "Mae €115 (마에) / Gran Mae €150 (그란 마에)",
+        lunchEur: 115,
+        dinnerText: "Mae €115 (마에) / Gran Mae €150 (그란 마에)",
+        dinnerEur: 115,
+        dress: "suggested",
+        dressText: "권장 · 스마트캐주얼",
+        website: "https://maebcn.com",
+        source: "Guidavera 2026-04",
+        extra: ""
+      },
+      {
+        name: "Moments",
+        nameKo: "모먼츠",
+        chef: "Raül Balam / Carme Ruscalleda(자문)",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Dreta · Mandarin Oriental",
+        hoodKo: "에이샴플라 우측 · 만다린 오리엔탈",
+        address: "Passeig de Gràcia 38-40",
+        addressKo: "그라시아 산책로 38-40",
+        cuisine: "현대 카탈란",
+        lunchHas: true,
+        lunchText: "Lighter tasting 약 €125 (라이트) / Tasting 약 €180 (테이스팅)",
+        lunchEur: 125,
+        dinnerText: "Lighter tasting 약 €125 (라이트) / Tasting 약 €180 (테이스팅)",
+        dinnerEur: 180,
+        dress: "enforced",
+        dressText: "명시 규정 · casual elegant. 볼캡·민소매·캐주얼 샌들·플립플롭 금지",
+        website: "https://www.mandarinoriental.com/en/barcelona/passeig-de-gracia/dine/moments",
+        source: "공식(드레스) + 교차확인(가격)",
+        extra: "화–토, 점심 라스트오더 14:00"
+      },
+      {
+        name: "Prodigi",
+        nameKo: "프로디지",
+        chef: "Jordi Tarré",
+        stars: 1,
+        area: "Eixample",
+        hood: "Eixample Dreta",
+        hoodKo: "에이샴플라 우측",
+        address: "Carrer de Girona 145",
+        addressKo: "지로나 거리 145",
+        cuisine: "현대 카탈란, 8테이블. 알라카르트 가능",
+        lunchHas: true,
+        lunchText: "Menú de mediodía €45 (평일 점심 코스)",
+        lunchEur: 45,
+        dinnerText: "Menú degustación €95 (테이스팅)",
+        dinnerEur: 95,
+        dress: "casual",
+        dressText: "캐주얼·명시 없음",
+        website: "https://prodigi.cat",
+        source: "교차확인(가격)",
+        extra: "시내 스타 점심 최저가 후보"
+      },
+      {
+        name: "Quirat",
+        nameKo: "키라트",
+        chef: "Víctor Torres",
+        stars: 1,
+        area: "Poble Sec",
+        hood: "Poble Sec · InterContinental",
+        hoodKo: "포블레 세크 · 인터컨티넨탈",
+        address: "Avinguda de Rius i Taulet 1-3",
+        addressKo: "리우스 이 타울렛 대로 1-3",
+        cuisine: "현대 카탈란 창작",
+        lunchHas: true,
+        lunchText: "18K €110 (18케이) / 24K €160 (24케이)",
+        lunchEur: 110,
+        dinnerText: "18K €110 (18케이) / 24K €160 (24케이)",
+        dinnerEur: 110,
+        dress: "enforced",
+        dressText: "명시 규정 · Smart Casual",
+        website: "https://quiratrestaurant.com",
+        source: "공식 사이트 (IVA 포함)",
+        extra: ""
+      },
+      {
+        name: "SCAPAR",
+        nameKo: "스카파르",
+        chef: "Koichi Kuwabara",
+        stars: 1,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Galvany",
+        hoodKo: "산 제르바시 · 갈바니",
+        address: "Carrer del Rector Ubach 53",
+        addressKo: "렉토르 우바크 거리 53",
+        cuisine: "가이세키 형식 + 카탈란·스페인 산물 오마카세. 2026 신규",
+        lunchHas: true,
+        lunchText: "Omakase €140 (오마카세, 금–일 12:30)",
+        lunchEur: 140,
+        dinnerText: "Omakase €140 (오마카세, 수–일 19:30)",
+        dinnerEur: 140,
+        dress: "suggested",
+        dressText: "권장 · 공식 문구 없음, 카운터 격식",
+        website: "https://restaurante.covermanager.com/scapar/",
+        source: "CoverManager 예약 페이지",
+        extra: "미쉐린에 일시 휴업 표기 이력. 방문 전 영업 확인"
+      },
+      {
+        name: "Slow & Low",
+        nameKo: "슬로 앤 로우",
+        chef: "Nicolás de la Vega, Francesc Beltrí",
+        stars: 1,
+        area: "Sant Antoni",
+        hood: "Sant Antoni",
+        hoodKo: "산 안토니",
+        address: "Carrer del Comte Borrell 119",
+        addressKo: "콤테 보렐 거리 119",
+        cuisine: "블라인드 테이스팅, 멕시코·아시아·지중해",
+        lunchHas: true,
+        lunchText: "Slow 13코스 €140 (슬로) / Slow&Low 15코스 €170 (슬로 앤 로우)",
+        lunchEur: 140,
+        dinnerText: "Slow €140 (슬로) / Slow&Low €170 (슬로 앤 로우, 2026-05 이후 €150 / €180 인상 안내)",
+        dinnerEur: 140,
+        dress: "casual",
+        dressText: "캐주얼·명시 없음",
+        website: "https://slowandlowbcn.com",
+        source: "Guidavera 2026",
+        extra: ""
+      },
+      {
+        name: "Suto",
+        nameKo: "수토",
+        chef: "Yoshikazu Suto",
+        stars: 1,
+        area: "Sants",
+        hood: "Sants",
+        hoodKo: "산츠",
+        address: "Carrer de Violant d'Hongria Reina d'Aragó 134",
+        addressKo: "비올란트 동그리아 레이나 다라고 거리 134",
+        cuisine: "6석 오마카세, 니기리·카키고리",
+        lunchHas: true,
+        lunchText: "Omakase €158 (오마카세, 영업일 제한)",
+        lunchEur: 158,
+        dinnerText: "Omakase €158 (오마카세)",
+        dinnerEur: 158,
+        dress: "suggested",
+        dressText: "권장 · 스마트·우아, 강제 규정은 미확인",
+        website: "https://restaurante.covermanager.com/reservar-en-suto",
+        source: "교차확인 2026",
+        extra: "예약이 매우 빠름. 일부 안내는 금요일만 영업"
+      },
+      {
+        name: "Teatro kitchen & bar",
+        nameKo: "테아트로 키친 앤 바",
+        chef: "Oliver Peña",
+        stars: 1,
+        area: "Eixample",
+        hood: "Paral·lel / Eixample",
+        hoodKo: "파랄렐 / 에이샴플라",
+        address: "Avinguda del Paral·lel 164",
+        addressKo: "파랄렐 대로 164",
+        cuisine: "창작 스낵·타파스, Tickets 계보. 막 구성 메뉴",
+        lunchHas: true,
+        lunchText: "토·일 점심. Degustación 약 €120 (테이스팅, 교차확인)",
+        lunchEur: 120,
+        dinnerText: "Surprise Show / À la Carte Show 약 €120 (서프라이즈 쇼 / 알라카르트 쇼)",
+        dinnerEur: 120,
+        dress: "suggested",
+        dressText: "권장 · Smart Casual (2차 안내)",
+        website: "https://www.teatrokitchenbar.com",
+        source: "공식(콘셉트·영업) + 교차확인(€120)",
+        extra: "월·화 휴무"
+      },
+      {
+        name: "Via Veneto",
+        nameKo: "비아 베네토",
+        chef: "David Andrés / Monje 가문",
+        stars: 1,
+        area: "Sant Gervasi",
+        hood: "Sant Gervasi · Galvany",
+        hoodKo: "산 제르바시 · 갈바니",
+        address: "Carrer de Ganduxer 10",
+        addressKo: "간둑세르 거리 10",
+        cuisine: "1967년 클래식 바르셀로나. 알라카르트·프레스 오리",
+        lunchHas: true,
+        lunchText: "À la carte + Gran Degustación 약 €175 (알라카르트 + 그랜드 테이스팅)",
+        lunchEur: 175,
+        dinnerText: "Gran Degustación 약 €175 (그랜드 테이스팅), 알라카르트가 본령",
+        dinnerEur: 175,
+        dress: "suggested",
+        dressText: "권장 · 클래식 룸, 재킷 권하는 분위기. 공식 강제 문구는 미확인",
+        website: "https://www.viavenetobarcelona.com",
+        source: "공식(주소·영업) + 교차확인(€175)",
+        extra: "화–토 점심·저녁"
+      }
+    ];
+
+    const areaSel = document.getElementById("area");
+    const lunchSel = document.getElementById("lunch");
+    const dressSel = document.getElementById("dress");
+    const qInput = document.getElementById("q");
+    const starInputs = [...document.querySelectorAll('input[name="star"]')];
+
+    const areas = [...new Set(RESTAURANTS.map((r) => r.area))].sort((a, b) => a.localeCompare(b, "en"));
+    areaSel.innerHTML += areas.map((a) => {
+      const ko = AREA_KO[a] ? " (" + AREA_KO[a] + ")" : "";
+      return `<option value="${a}">${a}${ko}</option>`;
+    }).join("");
+
+    function euro(n) {
+      return "€" + n.toLocaleString("ko-KR");
+    }
+
+    function loc(r) {
+      return r.hood + " (" + r.hoodKo + ")<br />" + r.address + " (" + r.addressKo + ")";
+    }
+
+    function locPlain(r) {
+      return r.hood + " (" + r.hoodKo + "), " + r.address + " (" + r.addressKo + ")";
+    }
+
+    function readControls() {
+      return {
+        stars: starInputs.filter((el) => el.checked).map((el) => Number(el.value)),
+        area: areaSel.value,
+        lunch: lunchSel.value,
+        dress: dressSel.value,
+        q: qInput.value.trim().toLowerCase()
+      };
+    }
+
+    function filterRestaurants(params) {
+      return RESTAURANTS.filter((r) => {
+        if (!params.stars.includes(r.stars)) return false;
+        if (params.area && r.area !== params.area) return false;
+        if (params.lunch === "yes" && !r.lunchHas) return false;
+        if (params.lunch === "no" && r.lunchHas) return false;
+        if (params.dress && r.dress !== params.dress) return false;
+        if (params.q) {
+          const hay = [r.name, r.nameKo, r.chef, r.cuisine, r.hood, r.hoodKo].join(" ").toLowerCase();
+          if (!hay.includes(params.q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function compute(params) {
+      const rows = filterRestaurants(params);
+      const byStar = { 1: 0, 2: 0, 3: 0 };
+      const byArea = {};
+      let lunchMin = null;
+      let lunchName = "";
+      let dinnerMin = null;
+      let dinnerMax = null;
+
+      rows.forEach((r) => {
+        byStar[r.stars] += 1;
+        byArea[r.area] = (byArea[r.area] || 0) + 1;
+        if (r.lunchHas && r.lunchEur != null && (lunchMin == null || r.lunchEur < lunchMin)) {
+          lunchMin = r.lunchEur;
+          lunchName = r.name + " (" + r.nameKo + ")";
+        }
+        if (r.dinnerEur != null) {
+          dinnerMin = dinnerMin == null ? r.dinnerEur : Math.min(dinnerMin, r.dinnerEur);
+          dinnerMax = dinnerMax == null ? r.dinnerEur : Math.max(dinnerMax, r.dinnerEur);
+        }
+      });
+
+      const series = Object.keys(byArea)
+        .sort((a, b) => byArea[b] - byArea[a] || a.localeCompare(b, "en"))
+        .map((name) => ({
+          name,
+          label: AREA_KO[name] || name,
+          value: byArea[name]
+        }));
+
+      return { rows, byStar, series, lunchMin, lunchName, dinnerMin, dinnerMax };
+    }
+
+    function writeKpis(model) {
+      document.getElementById("kpi-count").textContent = model.rows.length.toLocaleString("ko-KR") + "곳";
+      document.getElementById("kpi-stars").textContent =
+        "3스타 " + model.byStar[3] + " · 2스타 " + model.byStar[2] + " · 1스타 " + model.byStar[1];
+      document.getElementById("kpi-lunch").textContent = model.lunchMin == null ? "—" : euro(model.lunchMin);
+      document.getElementById("kpi-lunch-name").textContent = model.lunchName || "확인된 점심 코스 없음";
+      document.getElementById("kpi-dinner").textContent =
+        model.dinnerMin == null ? "—" : euro(model.dinnerMin) + "–" + euro(model.dinnerMax);
+    }
+
+    function drawChart(series) {
+      const svg = document.getElementById("chart");
+      const W = 1000;
+      const H = 280;
+      const pad = { t: 16, r: 16, b: 72, l: 40 };
+      const innerW = W - pad.l - pad.r;
+      const innerH = H - pad.t - pad.b;
+      const max = Math.max(1, ...series.map((s) => s.value));
+      const n = Math.max(series.length, 1);
+      const gap = 16;
+      const barW = series.length ? Math.min(72, (innerW - gap * (n - 1)) / n) : 0;
+
+      let bars = "";
+      series.forEach((s, i) => {
+        const h = (s.value / max) * innerH;
+        const x = pad.l + i * (barW + gap);
+        const y = pad.t + innerH - h;
+        bars += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="#0b5fff"></rect>`;
+        bars += `<text class="tick" x="${x + barW / 2}" y="${y - 6}" text-anchor="middle">${s.value}</text>`;
+        bars += `<text class="tick" x="${x + barW / 2}" y="${H - 34}" text-anchor="middle">${s.label}</text>`;
+        bars += `<text class="tick" x="${x + barW / 2}" y="${H - 16}" text-anchor="middle">${s.name}</text>`;
+      });
+
+      const axis = `<line class="axis" x1="${pad.l}" y1="${pad.t + innerH}" x2="${W - pad.r}" y2="${pad.t + innerH}"></line>`;
+      svg.innerHTML = series.length
+        ? axis + bars
+        : `<text class="tick" x="500" y="140" text-anchor="middle">표시할 식당이 없습니다</text>`;
+    }
+
+    function starBadge(r) {
+      const extra = r.name === "Cocina Hermanos Torres"
+        ? ' <span class="badge green">Green Star</span>'
+        : "";
+      return `<span class="badge">${r.stars}스타</span>${extra}`;
+    }
+
+    function writeCards(rows) {
+      const root = document.getElementById("cards");
+      if (!rows.length) {
+        root.innerHTML = '<div class="empty">조건에 맞는 식당이 없습니다.</div>';
+        return;
+      }
+      root.innerHTML = rows.map((r) => `
+        <article class="panel resto">
+          <div class="resto-top">
+            <div>
+              <h2>${r.name}</h2>
+              <div class="name-ko">${r.nameKo}</div>
+              <div class="chef">${r.chef}</div>
+            </div>
+            <div>${starBadge(r)}</div>
+          </div>
+          <dl class="meta">
+            <dt>위치</dt>
+            <dd>${loc(r)}</dd>
+            <dt>점심</dt>
+            <dd>${r.lunchText}</dd>
+            <dt>저녁</dt>
+            <dd>${r.dinnerText}</dd>
+            <dt>드레스</dt>
+            <dd>${r.dressText}</dd>
+            <dt>음식</dt>
+            <dd>${r.cuisine}${r.extra ? " · " + r.extra : ""}</dd>
+          </dl>
+          <div class="site"><a href="${r.website}" target="_blank" rel="noopener">공식 사이트</a> · ${r.source}</div>
+        </article>
+      `).join("");
+    }
+
+    function writeTable(rows) {
+      const body = document.getElementById("rows");
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="7">조건에 맞는 식당이 없습니다.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map((r) => `
+        <tr>
+          <td>${r.stars}</td>
+          <td>${r.name}<br />${r.nameKo}</td>
+          <td>${locPlain(r)}</td>
+          <td>${r.lunchText}</td>
+          <td>${r.dinnerText}</td>
+          <td>${r.dressText}</td>
+          <td>${r.cuisine}</td>
+        </tr>
+      `).join("");
+    }
+
+    function render() {
+      const params = readControls();
+      const model = compute(params);
+      writeKpis(model);
+      writeTable(model.rows);
+      writeCards(model.rows);
+      drawChart(model.series);
+    }
+
+    document.querySelectorAll(".panel input, .panel select").forEach((el) => {
+      el.addEventListener("input", render);
+    });
+    render();
+  </script>
+</body>
+</html>
