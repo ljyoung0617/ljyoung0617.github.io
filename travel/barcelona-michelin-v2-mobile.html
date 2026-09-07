@@ -341,7 +341,7 @@
         <li>식당명·동네·메뉴 한글은 병기 표기다. 예약·지도 검색은 원어를 쓴다.</li>
         <li>SCAPAR는 미쉐린 페이지에 일시 휴업 표기가 있었던 적이 있다. 예약 페이지는 오마카세 €140으로 열려 있으니 방문 전 영업을 확인한다.</li>
         <li>가격은 2026년 3–6월 전후 확인분이다. 예약 전 공식 사이트에서 다시 본다.</li>
-        <li>지도는 바르셀로나 시 전체를 보여 주고, 목록 9개 구역만 색으로 구분한다. 경계는 시 공식 구·바리를 단순화한 것이고, 랜드마크는 대략 위치다. 식당 좌표·실시간 지도가 아니다.</li>
+        <li>지도는 바르셀로나 시 전체를 보여 주고, 목록 9개 구역만 색으로 구분한다. 경계는 시 공식 구·바리를 단순화한 것이고, 랜드마크는 대략 위치다. 식당 좌표·실시간 지도가 아니다. 카드의 구글 지도 링크는 식당명·주소 검색이다.</li>
       </ul>
       <h3>출처</h3>
       <ul>
@@ -1132,6 +1132,11 @@
       return r.hood + " (" + r.hoodKo + "), " + r.address + " (" + r.addressKo + ")";
     }
 
+    function mapsUrl(r) {
+      return "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(r.name + ", " + r.address + ", Barcelona");
+    }
+
     function readControls() {
       return {
         stars: starInputs.filter((el) => el.checked).map((el) => Number(el.value)),
@@ -1531,7 +1536,7 @@ const mapView = { k: 1, x: 0, y: 0 };
             <dt>음식</dt>
             <dd>${r.cuisine}${r.extra ? " · " + r.extra : ""}</dd>
           </dl>
-          <div class="site"><a href="${r.website}" target="_blank" rel="noopener">공식 사이트</a> · ${r.source}</div>
+          <div class="site"><a href="${r.website}" target="_blank" rel="noopener">공식 사이트</a> · <a href="${mapsUrl(r)}" target="_blank" rel="noopener">구글 지도</a> · ${r.source}</div>
         </article>
       `).join("");
     }
