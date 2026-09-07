@@ -119,6 +119,14 @@
     }
     .note { margin-top: 8px; color: var(--muted); font-size: 13px; }
     .note + .note { margin-top: 4px; }
+    .home-link {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .home-link:hover { text-decoration: underline; }
     @media (max-width: 800px) {
       .controls, .controls.sub, .kpis, .rules { grid-template-columns: 1fr; }
       .kpi-value { font-size: 20px; }
@@ -128,6 +136,7 @@
 </head>
 <body>
   <div class="wrap">
+    <a class="home-link" href="./">← 페이지 목록</a>
     <h1>연금 감액·연기 수령 비교</h1>
     <p class="sub">65세가 첫 해입니다. 소득 감액 5년(50%)과 수령 연기(연 7.2% 단리 가산)를 비교하고, 그해 받은 연금은 월 수령이라 수익의 절반만 반영합니다.</p>
 
