@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>연금 감액·연기 수령 비교</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --ink: #1a1d21;
+      --muted: #5c6570;
+      --line: #e4e7eb;
+      --accent: #0b5fff;
+      --accent-soft: #e8f0ff;
+      --gain: #0a7a3e;
+      --loss: #b42318;
+      --gain-soft: #e7f6ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); margin: 0 0 20px; }
+    .panel, .card, .table-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .panel { padding: 20px 22px; margin-bottom: 16px; }
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .rule { padding: 14px 16px; }
+    .rule-label { font-size: 12px; color: var(--muted); }
+    .rule-value { font-size: 16px; font-weight: 700; margin-top: 4px; }
+    .rule-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 20px; }
+    .controls.sub { margin-top: 18px; grid-template-columns: 1.2fr 1fr; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .rate-row { display: flex; align-items: center; gap: 14px; }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+    .rate-value {
+      min-width: 64px;
+      text-align: right;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 16px;
+    }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .card { padding: 16px 18px; }
+    .kpi-label { font-size: 13px; color: var(--muted); }
+    .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.03em; }
+    .kpi-value.gain { color: var(--gain); }
+    .kpi-value.loss { color: var(--loss); }
+    .kpi-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .chart-card { padding: 16px 18px 10px; margin-bottom: 16px; }
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .chart-title { font-size: 15px; font-weight: 600; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 12px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+    svg { width: 100%; height: 408px; display: block; }
+    .axis, .grid { stroke: var(--line); stroke-width: 1; }
+    .tick { font-size: 11px; fill: var(--muted); }
+    .unit { font-size: 11px; fill: var(--muted); }
+    .table-wrap { margin-bottom: 16px; }
+    .table-card { overflow: auto; max-height: 480px; }
+    .table-card.open { overflow: visible; max-height: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8f9fb;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+    tbody tr:hover { background: #f7f9fc; }
+    tr.best { background: var(--gain-soft); }
+    tr.cut { background: var(--accent-soft); }
+    td.peak {
+      background: var(--gain-soft);
+      color: var(--gain);
+      font-weight: 700;
+    }
+    .note { margin-top: 8px; color: var(--muted); font-size: 13px; }
+    .note + .note { margin-top: 4px; }
+    @media (max-width: 800px) {
+      .controls, .controls.sub, .kpis, .rules { grid-template-columns: 1fr; }
+      .kpi-value { font-size: 20px; }
+      .chart-head { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>연금 감액·연기 수령 비교</h1>
+    <p class="sub">65세가 첫 해입니다. 소득 감액 5년(50%)과 수령 연기(연 7.2% 단리 가산)를 비교하고, 그해 받은 연금은 월 수령이라 수익의 절반만 반영합니다.</p>
+
+    <div class="rules">
+      <div class="card rule">
+        <div class="rule-label">즉시 수령</div>
+        <div class="rule-value">65~69세 월 90만 원</div>
+        <div class="rule-desc">기본 월 180만 원의 50%. 70세부터 월 180만 원.</div>
+      </div>
+      <div class="card rule">
+        <div class="rule-label">수령 연기</div>
+        <div class="rule-value">연 7.2% 단리 가산</div>
+        <div class="rule-desc">최초 월액 기준. 5년 연기 시 +36%. 연기 기간 수령액 0원.</div>
+      </div>
+      <div class="card rule">
+        <div class="rule-label">보유 자산</div>
+        <div class="rule-value">매년 말 연 복리</div>
+        <div class="rule-desc">기존 자산은 연 수익 전액, 그해 연금은 절반만 수익에 넣음.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="controls">
+        <div>
+          <label for="monthly">기본 월 연금액 (원)</label>
+          <input id="monthly" type="number" min="0" step="100000" value="1800000" />
+        </div>
+        <div>
+          <label for="principal">보유 자산 (원)</label>
+          <input id="principal" type="number" min="0" step="1000000" value="0" />
+        </div>
+        <div>
+          <label for="years">비교 기간 (년)</label>
+          <input id="years" type="number" min="6" max="50" step="1" value="20" />
+        </div>
+        <div>
+          <label for="rate">자산 수익률</label>
+          <div class="rate-row">
+            <input id="rate" type="range" min="0" max="12" step="0.1" value="5" />
+            <div class="rate-value" id="rateLabel">5.0%</div>
+          </div>
+        </div>
+      </div>
+      <div class="controls sub">
+        <div>
+          <label for="defer">비교할 연기 기간</label>
+          <div class="rate-row">
+            <input id="defer" type="range" min="0" max="5" step="1" value="5" />
+            <div class="rate-value" id="deferLabel">5년</div>
+          </div>
+        </div>
+        <div>
+          <label>이 기간의 월 수령</label>
+          <div class="kpi-hint" id="deferCashHint" style="margin-top: 6px; font-size: 14px; color: var(--ink);">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card">
+        <div class="kpi-label">즉시 수령 만기 자산</div>
+        <div class="kpi-value" id="kpiNow">—</div>
+        <div class="kpi-hint" id="kpiNowHint">65~69세 감액, 70세부터 전액</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label" id="kpiDeferTitle">선택 연기 만기 자산</div>
+        <div class="kpi-value" id="kpiDefer">—</div>
+        <div class="kpi-hint" id="kpiDeferHint">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">만기 자산 차이 (선택 − 즉시)</div>
+        <div class="kpi-value" id="kpiDiff">—</div>
+        <div class="kpi-hint" id="kpiDiffHint">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">자산 역전 나이</div>
+        <div class="kpi-value" id="kpiCross">—</div>
+        <div class="kpi-hint" id="kpiCrossHint">선택 연기가 즉시 수령을 앞서는 첫 나이</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div class="chart-title">나이별 기말 자산</div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <svg id="chart" viewBox="0 0 1000 408" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="table-wrap">
+      <div class="chart-title" style="margin: 0 0 4px; padding-left: 2px;">나이별 기말 자산 (그래프와 동일)</div>
+      <p class="note" style="margin: 0 0 8px;">초록 칸은 그 경우가 6개 중 최대가 된 전환점입니다. 즉시 수령은 역전당하기 직전, 연기는 바로 앞 경우를 처음 앞선 나이입니다.</p>
+      <div class="table-card open">
+        <table>
+          <thead>
+            <tr>
+              <th>나이</th>
+              <th>즉시</th>
+              <th>1년 연기</th>
+              <th>2년 연기</th>
+              <th>3년 연기</th>
+              <th>4년 연기</th>
+              <th>5년 연기</th>
+            </tr>
+          </thead>
+          <tbody id="chartRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="chart-title" style="margin: 0 0 8px; padding-left: 2px;">연기 기간별 요약</div>
+      <div class="table-card" style="max-height: none;">
+        <table>
+          <thead>
+            <tr>
+              <th>연기</th>
+              <th>가산</th>
+              <th>연기 기간 월액</th>
+              <th>감액기 월액</th>
+              <th>70세~ 월액</th>
+              <th>누적 연금액</th>
+              <th>만기 자산</th>
+              <th>즉시 대비</th>
+            </tr>
+          </thead>
+          <tbody id="summaryRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="chart-title" style="margin: 0 0 8px; padding-left: 2px;" id="detailTitle">나이별 상세 (즉시 vs 선택 연기)</div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>나이</th>
+              <th>즉시 월액</th>
+              <th>즉시 연액</th>
+              <th>즉시 수익</th>
+              <th>즉시 기말</th>
+              <th id="detailDeferH1">연기 월액</th>
+              <th id="detailDeferH2">연기 연액</th>
+              <th id="detailDeferH3">연기 수익</th>
+              <th id="detailDeferH4">연기 기말</th>
+              <th>자산 차이</th>
+            </tr>
+          </thead>
+          <tbody id="detailRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="note">공식: 연기가산 후 월액 = 기본 월액 × (1 + 연기년수 × 7.2%). 가산은 최초 월액 기준 단리이며 복리가 아닙니다. 최대 5년 연기 시 +36%.</p>
+    <p class="note">나이 a(65세 = 첫 해)의 월 수령액: a &lt; 65+연기년수 → 0원 / 그 이후이면서 a ≤ 69 → 가산 후 월액의 50% / a ≥ 70 → 가산 후 월액 전액.</p>
+    <p class="note">기말 자산 = 기초 자산 × (1 + 수익률) + 당해 연액 × (1 + 수익률/2). 연금을 매달 받으므로 그해 수령액은 평균 반 년만 굴린 것으로 봅니다. 연액 = 월액 × 12. 세금·건강보험·생활비 인출·물가 상승은 넣지 않았습니다.</p>
+    <p class="note">기본값: 65세 시작, 월 180만 원, 보유 자산 0원, 수익률 연 5%, 비교 기간 20년(84세까지), 감액 65~69세 50%.</p>
+  </div>
+
+  <script>
+    const START_AGE = 65;
+    const REDUCE_YEARS = 5;
+    const REDUCE_RATE = 0.5;
+    const INCREMENT = 0.072;
+    const MAX_DEFER = 5;
+    const COLORS = ["#0b5fff", "#0a7a3e", "#b45309", "#7c3aed", "#0e7490", "#be123c"];
+
+    const monthlyEl = document.getElementById("monthly");
+    const principalEl = document.getElementById("principal");
+    const yearsEl = document.getElementById("years");
+    const rateEl = document.getElementById("rate");
+    const deferEl = document.getElementById("defer");
+    const rateLabel = document.getElementById("rateLabel");
+    const deferLabel = document.getElementById("deferLabel");
+    const chartEl = document.getElementById("chart");
+    const legendEl = document.getElementById("legend");
+    const chartRowsEl = document.getElementById("chartRows");
+    const summaryRowsEl = document.getElementById("summaryRows");
+    const detailRowsEl = document.getElementById("detailRows");
+
+    function won(n) {
+      const sign = n < 0 ? "−" : "";
+      return sign + Math.round(Math.abs(n)).toLocaleString("ko-KR") + "원";
+    }
+
+    function signedWon(n) {
+      if (Math.abs(n) < 0.5) return "0원";
+      const sign = n > 0 ? "+" : "−";
+      return sign + Math.round(Math.abs(n)).toLocaleString("ko-KR") + "원";
+    }
+
+    function axisLabel(v) {
+      const abs = Math.abs(v);
+      if (abs >= 100000000) return (v / 100000000).toFixed(1).replace(/\.0$/, "") + "억";
+      if (abs >= 10000) return Math.round(v / 10000).toLocaleString("ko-KR") + "만";
+      return Math.round(v).toLocaleString("ko-KR");
+    }
+
+    function ageOf(year) {
+      return START_AGE + year - 1;
+    }
+
+    function ageLabel(year) {
+      return ageOf(year) + "세";
+    }
+
+    function ageRangeLabel(fromYear, toYear) {
+      const from = ageOf(fromYear);
+      const to = ageOf(toYear);
+      return from === to ? from + "세" : from + "~" + to + "세";
+    }
+
+    function boostedMonthly(baseMonthly, deferYears) {
+      return baseMonthly * (1 + deferYears * INCREMENT);
+    }
+
+    function monthlyForYear(year, baseMonthly, deferYears) {
+      if (year <= deferYears) return 0;
+      const full = boostedMonthly(baseMonthly, deferYears);
+      if (year <= REDUCE_YEARS) return full * (1 - REDUCE_RATE);
+      return full;
+    }
+
+    function simulate(principal, rate, years, baseMonthly, deferYears) {
+      const rows = [];
+      let balance = principal;
+      for (let year = 1; year <= years; year += 1) {
+        const monthly = monthlyForYear(year, baseMonthly, deferYears);
+        const annual = monthly * 12;
+        const start = balance;
+        const interest = (start + annual * 0.5) * rate;
+        const end = start + annual + interest;
+        rows.push({ year, age: ageOf(year), start, monthly, annual, interest, end });
+        balance = end;
+      }
+      return rows;
+    }
+
+    function compute(params) {
+      const scenarios = [];
+      for (let deferYears = 0; deferYears <= MAX_DEFER; deferYears += 1) {
+        const rows = simulate(
+          params.principal,
+          params.rate,
+          params.years,
+          params.baseMonthly,
+          deferYears
+        );
+        const last = rows[rows.length - 1];
+        const totalPension = rows.reduce((sum, row) => sum + row.annual, 0);
+        const fullMonthly = boostedMonthly(params.baseMonthly, deferYears);
+        const reducedMonthly = deferYears >= REDUCE_YEARS ? 0 : fullMonthly * (1 - REDUCE_RATE);
+        scenarios.push({
+          deferYears,
+          incrementPct: deferYears * INCREMENT * 100,
+          reducedMonthly,
+          normalMonthly: fullMonthly,
+          rows,
+          final: last ? last.end : params.principal,
+          totalPension
+        });
+      }
+      return scenarios;
+    }
+
+    function leadIndex(values) {
+      let best = 0;
+      for (let i = 1; i < values.length; i += 1) {
+        if (values[i] > values[best] + 0.5) best = i;
+      }
+      return best;
+    }
+
+    function peakMarks(scenarios) {
+      const n = scenarios[0].rows.length;
+      const leaders = [];
+      for (let i = 0; i < n; i += 1) {
+        leaders.push(leadIndex(scenarios.map((s) => s.rows[i].end)));
+      }
+      const marks = Array(scenarios.length).fill(null);
+      for (let i = 0; i < n; i += 1) {
+        if (leaders[i] === 0) marks[0] = i;
+      }
+      for (let d = 1; d < scenarios.length; d += 1) {
+        const first = leaders.indexOf(d);
+        marks[d] = first === -1 ? null : first;
+      }
+      return marks;
+    }
+
+    function firstLeadYear(nowRows, deferRows) {
+      for (let i = 0; i < nowRows.length; i += 1) {
+        if (deferRows[i].end > nowRows[i].end + 0.5) return deferRows[i].year;
+      }
+      return null;
+    }
+
+    function drawChart(scenarios, principal, selectedDefer) {
+      const W = 1000;
+      const H = 408;
+      const pad = { l: 72, r: 18, t: 18, b: 36 };
+      const years = scenarios[0].rows.length;
+      const values = [principal];
+      scenarios.forEach((s) => s.rows.forEach((r) => values.push(r.end)));
+      const max = Math.max(...values, 1) * 1.08;
+      const innerW = W - pad.l - pad.r;
+      const innerH = H - pad.t - pad.b;
+      const x = (i) => pad.l + (i / years) * innerW;
+      const y = (v) => pad.t + innerH - (v / max) * innerH;
+
+      let grid = `<text class="unit" x="${pad.l}" y="12">기말 자산</text>`;
+      for (let i = 0; i <= 4; i += 1) {
+        const v = (max / 4) * i;
+        const yy = y(v);
+        grid += `<line class="grid" x1="${pad.l}" y1="${yy}" x2="${W - pad.r}" y2="${yy}" />`;
+        grid += `<text class="tick" x="${pad.l - 8}" y="${yy + 4}" text-anchor="end">${axisLabel(v)}</text>`;
+      }
+
+      const xTicks = [0, Math.round(years / 2), years].filter((v, i, a) => a.indexOf(v) === i);
+      const xLabels = xTicks
+        .map((yr) => {
+          const label = yr === 0 ? START_AGE + "세" : ageLabel(yr);
+          return `<text class="tick" x="${x(yr)}" y="${H - 12}" text-anchor="middle">${label}</text>`;
+        })
+        .join("");
+
+      const lines = scenarios.map((s, idx) => {
+        const pts = [`${x(0)},${y(principal)}`]
+          .concat(s.rows.map((r) => `${x(r.year)},${y(r.end)}`))
+          .join(" ");
+        const selected = s.deferYears === selectedDefer;
+        const width = selected ? 3 : 1.8;
+        return `<polyline fill="none" stroke="${COLORS[idx]}" stroke-width="${width}" points="${pts}"></polyline>`;
+      }).join("");
+
+      chartEl.innerHTML = `${grid}${lines}${xLabels}`;
+      legendEl.innerHTML = scenarios.map((s, idx) => {
+        const name = s.deferYears === 0 ? "즉시" : s.deferYears + "년 연기";
+        return `<span style="color:${COLORS[idx]}"><i class="swatch"></i>${name}</span>`;
+      }).join("");
+    }
+
+    function render() {
+      const baseMonthly = Math.max(0, Number(monthlyEl.value) || 0);
+      const principal = Math.max(0, Number(principalEl.value) || 0);
+      const years = Math.max(6, Math.min(50, Number(yearsEl.value) || 20));
+      const ratePct = Number(rateEl.value);
+      const rate = ratePct / 100;
+      const selectedDefer = Math.max(0, Math.min(MAX_DEFER, Number(deferEl.value) || 0));
+      rateLabel.textContent = ratePct.toFixed(1) + "%";
+      deferLabel.textContent = selectedDefer === 0 ? "즉시" : selectedDefer + "년";
+
+      const scenarios = compute({ principal, rate, years, baseMonthly });
+      const now = scenarios[0];
+      const selected = scenarios[selectedDefer];
+      const ranked = scenarios.slice().sort((a, b) => b.final - a.final);
+      const best = ranked[0];
+      const cross = selected.deferYears === 0 ? null : firstLeadYear(now.rows, selected.rows);
+      const diff = selected.final - now.final;
+
+      const cashBits = [];
+      if (selectedDefer > 0) {
+        cashBits.push(ageRangeLabel(1, selectedDefer) + " 0원");
+      }
+      if (selectedDefer < REDUCE_YEARS) {
+        const from = Math.max(1, selectedDefer + 1);
+        cashBits.push(ageRangeLabel(from, REDUCE_YEARS) + " 월 " + won(selected.reducedMonthly));
+      }
+      cashBits.push("70세~ 월 " + won(selected.normalMonthly));
+      document.getElementById("deferCashHint").textContent = cashBits.join(" → ");
+
+      document.getElementById("kpiNow").textContent = won(now.final);
+      document.getElementById("kpiDeferTitle").textContent =
+        selectedDefer === 0 ? "즉시 수령 만기 자산" : selectedDefer + "년 연기 만기 자산";
+      document.getElementById("kpiDefer").textContent = won(selected.final);
+      document.getElementById("kpiDeferHint").textContent =
+        best.deferYears === selected.deferYears
+          ? "이 비교 기간에서 만기 자산이 가장 큼"
+          : "만기 최선은 " + (best.deferYears === 0 ? "즉시 수령" : best.deferYears + "년 연기");
+      const diffEl = document.getElementById("kpiDiff");
+      diffEl.textContent = signedWon(diff);
+      diffEl.className = "kpi-value" + (diff > 0.5 ? " gain" : diff < -0.5 ? " loss" : "");
+      document.getElementById("kpiDiffHint").textContent =
+        selectedDefer === 0
+          ? "같은 시나리오를 비교 중"
+          : (diff > 0.5 ? "선택 연기가 즉시 수령보다 큼" : diff < -0.5 ? "즉시 수령이 선택 연기보다 큼" : "만기 자산이 같음");
+      document.getElementById("kpiCross").textContent = cross ? ageLabel(cross) : (selectedDefer === 0 ? "—" : "없음");
+      document.getElementById("kpiCrossHint").textContent = cross
+        ? ageLabel(cross) + " 기말부터 선택 연기의 자산이 더 큼"
+        : selectedDefer === 0
+          ? "즉시 수령만 보고 있음"
+          : "비교 기간 안에 즉시 수령을 넘지 못함";
+
+      document.getElementById("detailTitle").textContent =
+        selectedDefer === 0
+          ? "나이별 상세 (즉시 수령)"
+          : "나이별 상세 (즉시 vs " + selectedDefer + "년 연기)";
+      document.getElementById("detailDeferH1").textContent =
+        selectedDefer === 0 ? "즉시 월액" : selectedDefer + "년 연기 월액";
+      document.getElementById("detailDeferH2").textContent =
+        selectedDefer === 0 ? "즉시 연액" : selectedDefer + "년 연기 연액";
+      document.getElementById("detailDeferH3").textContent =
+        selectedDefer === 0 ? "즉시 수익" : selectedDefer + "년 연기 수익";
+      document.getElementById("detailDeferH4").textContent =
+        selectedDefer === 0 ? "즉시 기말" : selectedDefer + "년 연기 기말";
+
+      const peaks = peakMarks(scenarios);
+      chartRowsEl.innerHTML = now.rows.map((row, i) => {
+        const cells = scenarios.map((s, d) => {
+          const cls = peaks[d] === i ? "peak" : "";
+          return `<td class="${cls}">${won(s.rows[i].end)}</td>`;
+        }).join("");
+        return `<tr><td>${row.age}세</td>${cells}</tr>`;
+      }).join("");
+
+      summaryRowsEl.innerHTML = scenarios.map((s) => {
+        const vs = s.final - now.final;
+        const cls = s.deferYears === selectedDefer ? "cut" : (s.deferYears === best.deferYears ? "best" : "");
+        const deferName = s.deferYears === 0 ? "즉시" : s.deferYears + "년";
+        const mark = s.deferYears === selectedDefer ? " (선택)" : (s.deferYears === best.deferYears ? " (최선)" : "");
+        return `
+          <tr class="${cls}">
+            <td>${deferName}${mark}</td>
+            <td>${s.incrementPct.toFixed(1)}%</td>
+            <td>${s.deferYears === 0 ? "—" : "0원"}</td>
+            <td>${s.deferYears >= REDUCE_YEARS ? "—" : won(s.reducedMonthly)}</td>
+            <td>${won(s.normalMonthly)}</td>
+            <td>${won(s.totalPension)}</td>
+            <td>${won(s.final)}</td>
+            <td>${signedWon(vs)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      detailRowsEl.innerHTML = now.rows.map((row, i) => {
+        const other = selected.rows[i];
+        const gap = other.end - row.end;
+        const cls = row.age === 70 ? "cut" : "";
+        return `
+          <tr class="${cls}">
+            <td>${row.age}세</td>
+            <td>${won(row.monthly)}</td>
+            <td>${won(row.annual)}</td>
+            <td>${won(row.interest)}</td>
+            <td>${won(row.end)}</td>
+            <td>${won(other.monthly)}</td>
+            <td>${won(other.annual)}</td>
+            <td>${won(other.interest)}</td>
+            <td>${won(other.end)}</td>
+            <td>${signedWon(gap)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      drawChart(scenarios, principal, selectedDefer);
+    }
+
+    [monthlyEl, principalEl, yearsEl, rateEl, deferEl].forEach((el) => {
+      el.addEventListener("input", render);
+    });
+    render();
+  </script>
+</body>
+</html>
