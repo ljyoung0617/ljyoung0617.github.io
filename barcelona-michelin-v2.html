@@ -63,6 +63,28 @@
       font-size: 14px;
       color: var(--ink);
     }
+    .price-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 20px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .rate-row { display: flex; align-items: center; gap: 14px; }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+    .rate-value {
+      min-width: 76px;
+      text-align: right;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
     .kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -138,7 +160,7 @@
     .note ul { margin: 0; padding-left: 18px; }
     .empty { color: var(--muted); padding: 20px; text-align: center; }
     @media (max-width: 800px) {
-      .controls, .kpis, .cards { grid-template-columns: 1fr; }
+      .controls, .kpis, .cards, .price-controls { grid-template-columns: 1fr; }
       .kpi-value { font-size: 20px; }
     }
   </style>
@@ -184,6 +206,24 @@
         <div>
           <label for="q">이름 검색</label>
           <input id="q" type="search" placeholder="식당·셰프·한글명" />
+        </div>
+      </div>
+      <div class="price-controls">
+        <div>
+          <label for="lunchMax">점심 코스 최대</label>
+          <div class="rate-row">
+            <input id="lunchMax" type="range" />
+            <span class="rate-value" id="lunchMaxVal">—</span>
+          </div>
+          <div class="hint">확인된 점심 코스 중 최저가 기준. 코스 가격이 없으면 이 슬라이더에 걸리지 않음.</div>
+        </div>
+        <div>
+          <label for="dinnerMax">저녁 코스 최대</label>
+          <div class="rate-row">
+            <input id="dinnerMax" type="range" />
+            <span class="rate-value" id="dinnerMaxVal">—</span>
+          </div>
+          <div class="hint">확인된 저녁 코스 중 최저가 기준. 코스 가격이 없으면 이 슬라이더에 걸리지 않음.</div>
         </div>
       </div>
     </section>
@@ -238,6 +278,7 @@
         <li>스타는 미쉐린 가이드 스페인 2026(2025년 11월 발표) 바르셀로나 시내 목록이다. 인접시 Lluerna, Tresmacarrons는 제외했다.</li>
         <li>가격은 코스 음식 1인분. 와인·봉사료·예약 보증금은 별도. 스페인 외식 IVA(보통 10%)는 공식 표기에 포함된 경우가 많다.</li>
         <li>점심/저녁이 같은 코스면 양쪽에 같은 금액을 적었다. 평일 점심 특별 메뉴가 있으면 점심 칸에 그 값을 우선했다.</li>
+        <li>가격 슬라이더는 단품이 아니라, 이미 적힌 코스 중 그 식당의 최저가다. 기본값은 전체 최댓값이라 모든 식당이 보인다.</li>
         <li>드레스코드 “명시 규정”은 예약/웹에 복장 제한이 적힌 경우만. 나머지는 권장 또는 캐주얼·명시 없음.</li>
         <li>식당명·동네·메뉴 한글은 병기 표기다. 예약·지도 검색은 원어를 쓴다.</li>
         <li>SCAPAR는 미쉐린 페이지에 일시 휴업 표기가 있었던 적이 있다. 예약 페이지는 오마카세 €140으로 열려 있으니 방문 전 영업을 확인한다.</li>
@@ -910,7 +951,27 @@
     const lunchSel = document.getElementById("lunch");
     const dressSel = document.getElementById("dress");
     const qInput = document.getElementById("q");
+    const lunchMaxEl = document.getElementById("lunchMax");
+    const dinnerMaxEl = document.getElementById("dinnerMax");
     const starInputs = [...document.querySelectorAll('input[name="star"]')];
+
+    function priceBounds(key) {
+      const vals = RESTAURANTS.map((r) => r[key]).filter((v) => v != null);
+      return { min: Math.min.apply(null, vals), max: Math.max.apply(null, vals) };
+    }
+
+    const lunchBound = priceBounds("lunchEur");
+    const dinnerBound = priceBounds("dinnerEur");
+
+    function setupSlider(el, bound) {
+      el.min = String(bound.min);
+      el.max = String(bound.max);
+      el.step = "1";
+      el.value = String(bound.max);
+    }
+
+    setupSlider(lunchMaxEl, lunchBound);
+    setupSlider(dinnerMaxEl, dinnerBound);
 
     const areas = [...new Set(RESTAURANTS.map((r) => r.area))].sort((a, b) => a.localeCompare(b, "en"));
     areaSel.innerHTML += areas.map((a) => {
@@ -936,6 +997,8 @@
         area: areaSel.value,
         lunch: lunchSel.value,
         dress: dressSel.value,
+        lunchMax: Number(lunchMaxEl.value),
+        dinnerMax: Number(dinnerMaxEl.value),
         q: qInput.value.trim().toLowerCase()
       };
     }
@@ -946,6 +1009,8 @@
         if (params.area && r.area !== params.area) return false;
         if (params.lunch === "yes" && !r.lunchHas) return false;
         if (params.lunch === "no" && r.lunchHas) return false;
+        if (r.lunchEur != null && r.lunchEur > params.lunchMax) return false;
+        if (r.dinnerEur != null && r.dinnerEur > params.dinnerMax) return false;
         if (params.dress && r.dress !== params.dress) return false;
         if (params.q) {
           const hay = [r.name, r.nameKo, r.chef, r.cuisine, r.hood, r.hoodKo].join(" ").toLowerCase();
@@ -989,6 +1054,8 @@
     }
 
     function writeKpis(model) {
+      document.getElementById("lunchMaxVal").textContent = euro(Number(lunchMaxEl.value));
+      document.getElementById("dinnerMaxVal").textContent = euro(Number(dinnerMaxEl.value));
       document.getElementById("kpi-count").textContent = model.rows.length.toLocaleString("ko-KR") + "곳";
       document.getElementById("kpi-stars").textContent =
         "3스타 " + model.byStar[3] + " · 2스타 " + model.byStar[2] + " · 1스타 " + model.byStar[1];
