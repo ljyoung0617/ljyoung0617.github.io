@@ -132,11 +132,28 @@
       .kpi-value { font-size: 20px; }
       .chart-head { flex-direction: column; }
     }
+
+    .to-top {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 40;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .to-top[hidden] { display: none; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <a class="home-link" href="./">← 페이지 목록</a>
+    <a class="home-link" href="pension.html">← pension</a>
     <h1>연금 감액·연기 수령 비교</h1>
     <p class="sub">65세가 첫 해입니다. 소득 감액 5년(50%)과 수령 연기(연 7.2% 단리 가산)를 비교하고, 그해 받은 연금은 월 수령이라 수익의 절반만 반영합니다.</p>
 
@@ -297,6 +314,7 @@
     <p class="note">기본값: 65세 시작, 월 180만 원, 보유 자산 0원, 수익률 연 5%, 비교 기간 20년(84세까지), 감액 65~69세 50%.</p>
   </div>
 
+  <button type="button" class="to-top" id="toTop" hidden aria-label="맨 위로">↑</button>
   <script>
     const START_AGE = 65;
     const REDUCE_YEARS = 5;
@@ -599,6 +617,34 @@
       el.addEventListener("input", render);
     });
     render();
+
+    (function () {
+      const btn = document.getElementById("toTop");
+      if (!btn) return;
+      function scroller() {
+        return document.scrollingElement || document.documentElement;
+      }
+      function y() {
+        return scroller().scrollTop || window.pageYOffset || 0;
+      }
+      function sync() {
+        btn.hidden = y() < 320;
+      }
+      ["scroll", "touchmove", "wheel"].forEach((ev) => {
+        window.addEventListener(ev, sync, { passive: true, capture: true });
+        document.addEventListener(ev, sync, { passive: true, capture: true });
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("scroll", sync, { passive: true });
+      }
+      btn.addEventListener("click", () => {
+        const el = scroller();
+        if (el.scrollTo) el.scrollTo({ top: 0, behavior: "smooth" });
+        else el.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      sync();
+    })();
   </script>
 </body>
 </html>

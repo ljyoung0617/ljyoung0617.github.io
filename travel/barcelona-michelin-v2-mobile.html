@@ -26,6 +26,15 @@
       line-height: 1.45;
     }
     .wrap { max-width: 480px; margin: 0 auto; padding: 16px 14px 48px; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      margin-bottom: 10px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+    }
     h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.03em; }
     .sub { color: var(--muted); margin: 0 0 14px; font-size: 13px; }
     .panel, .card, .table-card, .chart-card {
@@ -218,10 +227,28 @@
     .note h3 { color: var(--ink); font-size: 14px; margin: 0 0 8px; }
     .note ul { margin: 0; padding-left: 18px; }
     .empty { color: var(--muted); padding: 16px; text-align: center; }
+
+    .to-top {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 40;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .to-top[hidden] { display: none; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <a class="back" href="travel.html">← travel</a>
     <h1>바르셀로나 미쉐린 식당 v2 모바일</h1>
     <p class="sub">모바일 · 미쉐린 가이드 스페인 2026 · 시내 29곳 · 코스 1인 가격(음료 제외)</p>
 
@@ -352,6 +379,7 @@
     </footer>
   </div>
 
+  <button type="button" class="to-top" id="toTop" hidden aria-label="맨 위로">↑</button>
   <script>
     const AREA_KO = {
       Eixample: "에이샴플라",
@@ -1572,6 +1600,34 @@ const mapView = { k: 1, x: 0, y: 0 };
     });
     setupMapInteraction();
     render();
+
+    (function () {
+      const btn = document.getElementById("toTop");
+      if (!btn) return;
+      function scroller() {
+        return document.scrollingElement || document.documentElement;
+      }
+      function y() {
+        return scroller().scrollTop || window.pageYOffset || 0;
+      }
+      function sync() {
+        btn.hidden = y() < 320;
+      }
+      ["scroll", "touchmove", "wheel"].forEach((ev) => {
+        window.addEventListener(ev, sync, { passive: true, capture: true });
+        document.addEventListener(ev, sync, { passive: true, capture: true });
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("scroll", sync, { passive: true });
+      }
+      btn.addEventListener("click", () => {
+        const el = scroller();
+        if (el.scrollTo) el.scrollTo({ top: 0, behavior: "smooth" });
+        else el.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      sync();
+    })();
   </script>
 </body>
 </html>

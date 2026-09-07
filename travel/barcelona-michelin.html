@@ -27,6 +27,13 @@
       line-height: 1.45;
     }
     .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+    .back {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+    }
     h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.03em; }
     .sub { color: var(--muted); margin: 0 0 22px; }
     .panel, .card, .table-card, .chart-card {
@@ -143,10 +150,28 @@
       .controls, .kpis, .cards { grid-template-columns: 1fr; }
       .kpi-value { font-size: 20px; }
     }
+
+    .to-top {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 40;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .to-top[hidden] { display: none; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <a class="back" href="travel.html">← travel</a>
     <h1>바르셀로나 미쉐린 식당</h1>
     <p class="sub">미쉐린 가이드 스페인 2026 · 바르셀로나 시내 29곳 · 코스 1인 가격(음료 제외)</p>
 
@@ -269,6 +294,7 @@
     </footer>
   </div>
 
+  <button type="button" class="to-top" id="toTop" hidden aria-label="맨 위로">↑</button>
   <script>
     const RESTAURANTS = [
       {
@@ -1073,6 +1099,34 @@
       el.addEventListener("input", render);
     });
     render();
+
+    (function () {
+      const btn = document.getElementById("toTop");
+      if (!btn) return;
+      function scroller() {
+        return document.scrollingElement || document.documentElement;
+      }
+      function y() {
+        return scroller().scrollTop || window.pageYOffset || 0;
+      }
+      function sync() {
+        btn.hidden = y() < 320;
+      }
+      ["scroll", "touchmove", "wheel"].forEach((ev) => {
+        window.addEventListener(ev, sync, { passive: true, capture: true });
+        document.addEventListener(ev, sync, { passive: true, capture: true });
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("scroll", sync, { passive: true });
+      }
+      btn.addEventListener("click", () => {
+        const el = scroller();
+        if (el.scrollTo) el.scrollTo({ top: 0, behavior: "smooth" });
+        else el.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      sync();
+    })();
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>페이지 목록</title>
+  <title>samples</title>
   <style>
     :root {
       --bg: #f4f5f7;
@@ -22,6 +22,7 @@
       line-height: 1.45;
     }
     .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    .back { display: inline-block; margin-bottom: 16px; color: var(--accent); text-decoration: none; font-size: 14px; }
     h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.03em; }
     .sub { color: var(--muted); margin: 0 0 24px; }
     .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -43,26 +44,17 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>페이지 목록</h1>
-    <p class="sub">폴더를 열면 그 안의 페이지가 나옵니다. 같은 목록이 GitHub Pages 루트에서도 열립니다.</p>
+    <a class="back" href="../index.html">← 페이지 목록</a>
+    <h1>samples</h1>
+    <p class="sub">이 폴더의 페이지입니다.</p>
     <ul class="list" id="pages"></ul>
   </div>
   <script>
     const pages = [
       {
-        href: "travel/travel.html",
-        title: "travel",
-        desc: "바르셀로나 시내 고평점 식당, 미쉐린 가이드 비교."
-      },
-      {
-        href: "pension/pension.html",
-        title: "pension",
-        desc: "연금 감액·연기 수령 비교."
-      },
-      {
-        href: "samples/samples.html",
-        title: "samples",
-        desc: "인터랙티브 HTML 샘플."
+        href: "compound-interest.html",
+        title: "복리 자산 증가 시뮬레이터",
+        desc: "연 복리 기준. 이자율 슬라이더를 움직이면 그래프와 연도별 표가 즉시 바뀝니다."
       }
     ];
 

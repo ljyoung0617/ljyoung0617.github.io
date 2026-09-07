@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>복리 자산 증가 시뮬레이터</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --ink: #1a1d21;
+      --muted: #5c6570;
+      --line: #e4e7eb;
+      --accent: #0b5fff;
+      --accent-soft: #e8f0ff;
+      --gain: #0a7a3e;
+      --gain-soft: #e7f6ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+    .back {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); margin: 0 0 28px; }
+    .panel, .card, .table-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .panel { padding: 20px 22px; margin-bottom: 16px; }
+    .controls { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .rate-row { display: flex; align-items: center; gap: 14px; }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+    .rate-value {
+      min-width: 72px;
+      text-align: right;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 16px;
+    }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .card { padding: 16px 18px; }
+    .kpi-label { font-size: 13px; color: var(--muted); }
+    .kpi-value { font-size: 24px; font-weight: 700; margin-top: 4px; letter-spacing: -0.03em; }
+    .kpi-value.gain { color: var(--gain); }
+    .chart-card { padding: 16px 18px 10px; margin-bottom: 16px; }
+    .chart-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    svg { width: 100%; height: 320px; display: block; }
+    .axis, .grid { stroke: var(--line); stroke-width: 1; }
+    .line { fill: none; stroke: var(--accent); stroke-width: 2.4; }
+    .area { fill: var(--accent-soft); }
+    .tick { font-size: 11px; fill: var(--muted); }
+    .table-card { overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { background: #f8f9fb; color: var(--muted); font-weight: 600; font-size: 12px; }
+    tbody tr:hover { background: #f7f9fc; }
+    .note { margin-top: 14px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 800px) {
+      .controls, .kpis { grid-template-columns: 1fr; }
+      .kpi-value { font-size: 20px; }
+    }
+
+    .to-top {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 40;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .to-top[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="samples.html">← samples</a>
+    <h1>복리 자산 증가 시뮬레이터</h1>
+    <p class="sub">연 복리 기준. 이자율 슬라이더를 움직이면 그래프와 연도별 표가 즉시 바뀝니다.</p>
+
+    <div class="panel">
+      <div class="controls">
+        <div>
+          <label for="rate">연 이자율</label>
+          <div class="rate-row">
+            <input id="rate" type="range" min="0" max="15" step="0.1" value="5" />
+            <div class="rate-value" id="rateLabel">5.0%</div>
+          </div>
+        </div>
+        <div>
+          <label for="principal">초기 원금 (원)</label>
+          <input id="principal" type="number" min="0" step="1000000" value="100000000" />
+        </div>
+        <div>
+          <label for="years">기간 (년)</label>
+          <input id="years" type="number" min="1" max="80" step="1" value="30" />
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="card">
+        <div class="kpi-label">만기 자산</div>
+        <div class="kpi-value" id="finalValue">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">총 이자 수익</div>
+        <div class="kpi-value gain" id="interestValue">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">원금 대비 배수</div>
+        <div class="kpi-value" id="multipleValue">—</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-title">연도별 자산 잔액</div>
+      <svg id="chart" viewBox="0 0 1000 320" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>연차</th>
+            <th>기초 잔액</th>
+            <th>당해 이자</th>
+            <th>기말 잔액</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="note">가정: 매년 말 1회 복리 적용, 추가 납입·세금·인플레이션 없음. 기본값 원금 1억 원, 기간 30년.</p>
+  </div>
+
+  <button type="button" class="to-top" id="toTop" hidden aria-label="맨 위로">↑</button>
+  <script>
+    const rateEl = document.getElementById("rate");
+    const principalEl = document.getElementById("principal");
+    const yearsEl = document.getElementById("years");
+    const rateLabel = document.getElementById("rateLabel");
+    const finalEl = document.getElementById("finalValue");
+    const interestEl = document.getElementById("interestValue");
+    const multipleEl = document.getElementById("multipleValue");
+    const rowsEl = document.getElementById("rows");
+    const chartEl = document.getElementById("chart");
+
+    function won(n) {
+      return Math.round(n).toLocaleString("ko-KR") + "원";
+    }
+
+    function schedule(principal, rate, years) {
+      const rows = [];
+      let balance = principal;
+      for (let year = 1; year <= years; year += 1) {
+        const start = balance;
+        const interest = start * rate;
+        balance = start + interest;
+        rows.push({ year, start, interest, end: balance });
+      }
+      return rows;
+    }
+
+    function drawChart(rows, principal) {
+      const W = 1000, H = 320;
+      const pad = { l: 78, r: 18, t: 16, b: 36 };
+      const values = [principal, ...rows.map((r) => r.end)];
+      const max = Math.max(...values) * 1.08 || 1;
+      const innerW = W - pad.l - pad.r;
+      const innerH = H - pad.t - pad.b;
+      const x = (i) => pad.l + (i / (values.length - 1 || 1)) * innerW;
+      const y = (v) => pad.t + innerH - (v / max) * innerH;
+
+      const ticks = 4;
+      let grid = "";
+      for (let i = 0; i <= ticks; i += 1) {
+        const v = (max / ticks) * i;
+        const yy = y(v);
+        grid += `<line class="grid" x1="${pad.l}" y1="${yy}" x2="${W - pad.r}" y2="${yy}" />`;
+        grid += `<text class="tick" x="${pad.l - 8}" y="${yy + 4}" text-anchor="end">${Math.round(v / 100000000)}억</text>`;
+      }
+
+      const points = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+      const area = `${x(0)},${y(0)} ${points} ${x(values.length - 1)},${y(0)}`;
+      const lastYear = rows.length;
+      const xLabels = [0, Math.round(lastYear / 2), lastYear]
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .map((yr) => `<text class="tick" x="${x(yr)}" y="${H - 12}" text-anchor="middle">${yr}년</text>`)
+        .join("");
+
+      chartEl.innerHTML = `
+        ${grid}
+        <polygon class="area" points="${area}"></polygon>
+        <polyline class="line" points="${points}"></polyline>
+        ${xLabels}
+      `;
+    }
+
+    function render() {
+      const principal = Math.max(0, Number(principalEl.value) || 0);
+      const years = Math.max(1, Math.min(80, Number(yearsEl.value) || 1));
+      const ratePct = Number(rateEl.value);
+      const rate = ratePct / 100;
+      rateLabel.textContent = ratePct.toFixed(1) + "%";
+
+      const rows = schedule(principal, rate, years);
+      const finalValue = rows.length ? rows[rows.length - 1].end : principal;
+      finalEl.textContent = won(finalValue);
+      interestEl.textContent = "+" + won(finalValue - principal);
+      multipleEl.textContent = principal ? (finalValue / principal).toFixed(2) + "배" : "—";
+
+      rowsEl.innerHTML = rows.map((r) => `
+        <tr>
+          <td>${r.year}년</td>
+          <td>${won(r.start)}</td>
+          <td>${won(r.interest)}</td>
+          <td>${won(r.end)}</td>
+        </tr>
+      `).join("");
+
+      drawChart(rows, principal);
+    }
+
+    [rateEl, principalEl, yearsEl].forEach((el) => {
+      el.addEventListener("input", render);
+    });
+    render();
+
+    (function () {
+      const btn = document.getElementById("toTop");
+      if (!btn) return;
+      function scroller() {
+        return document.scrollingElement || document.documentElement;
+      }
+      function y() {
+        return scroller().scrollTop || window.pageYOffset || 0;
+      }
+      function sync() {
+        btn.hidden = y() < 320;
+      }
+      ["scroll", "touchmove", "wheel"].forEach((ev) => {
+        window.addEventListener(ev, sync, { passive: true, capture: true });
+        document.addEventListener(ev, sync, { passive: true, capture: true });
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("scroll", sync, { passive: true });
+      }
+      btn.addEventListener("click", () => {
+        const el = scroller();
+        if (el.scrollTo) el.scrollTo({ top: 0, behavior: "smooth" });
+        else el.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>
