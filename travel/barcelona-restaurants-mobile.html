@@ -48,13 +48,6 @@
       border-radius: 12px;
     }
     .panel { padding: 14px; margin-bottom: 12px; }
-    .sticky {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      background: var(--bg);
-      padding: 8px 0 4px;
-    }
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
     .chips {
       display: flex;
@@ -203,24 +196,22 @@
     <h1>바르셀로나 시내 고평점 식당</h1>
     <p class="sub">구글 지도 모바일 · 평점 4.5+ · 리뷰 1,000+ · 2026-09-07</p>
 
-    <div class="sticky">
-      <div class="panel">
-        <div class="chips" id="chips"></div>
-        <input id="q" type="search" placeholder="이름, 요리, 주소 검색" enterkeyhint="search" />
-        <label for="minRating">최소 평점</label>
-        <div class="row">
-          <input id="minRating" type="range" min="45" max="49" step="1" value="45" />
-          <span class="val" id="minRatingVal">4.5</span>
-        </div>
-        <label for="minReviews">최소 리뷰</label>
-        <div class="row">
-          <input id="minReviews" type="range" min="1000" max="20000" step="500" value="1000" />
-          <span class="val" id="minReviewsVal">1,000</span>
-        </div>
-        <div class="sorts">
-          <button class="sort-btn on" data-sort="reviews" type="button">리뷰 많은 순</button>
-          <button class="sort-btn" data-sort="rating" type="button">평점 높은 순</button>
-        </div>
+    <div class="panel">
+      <div class="chips" id="chips"></div>
+      <input id="q" type="search" placeholder="이름, 요리, 주소 검색" enterkeyhint="search" />
+      <label for="minRating">최소 평점</label>
+      <div class="row">
+        <input id="minRating" type="range" min="45" max="49" step="1" value="45" />
+        <span class="val" id="minRatingVal">4.5</span>
+      </div>
+      <label for="minReviews">최소 리뷰</label>
+      <div class="row">
+        <input id="minReviews" type="range" min="1000" max="20000" step="500" value="1000" />
+        <span class="val" id="minReviewsVal">1,000</span>
+      </div>
+      <div class="sorts">
+        <button class="sort-btn on" data-sort="reviews" type="button">리뷰 많은 순</button>
+        <button class="sort-btn" data-sort="rating" type="button">평점 높은 순</button>
       </div>
     </div>
 
